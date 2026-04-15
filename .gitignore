@@ -1,1 +1,5 @@
 .superpowers/
+.next/
+node_modules/
+.env*.local
+.claude/
