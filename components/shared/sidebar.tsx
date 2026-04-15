@@ -1,0 +1,94 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  List,
+  CreditCard,
+  Repeat,
+  TrendingUp,
+  Wallet,
+  BarChart3,
+  Settings,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const SECTIONS = [
+  {
+    label: 'Principal',
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/transactions', label: 'Transacciones', icon: List },
+    ],
+  },
+  {
+    label: 'Compromisos',
+    items: [
+      { href: '/msi', label: 'MSI', icon: CreditCard },
+      { href: '/subscriptions', label: 'Suscripciones', icon: Repeat, disabled: true },
+    ],
+  },
+  {
+    label: 'Patrimonio',
+    items: [
+      { href: '/investments', label: 'Inversiones', icon: TrendingUp, disabled: true },
+      { href: '/accounts', label: 'Cuentas', icon: Wallet },
+    ],
+  },
+  {
+    label: 'Análisis',
+    items: [
+      { href: '/reports', label: 'Reportes', icon: BarChart3, disabled: true },
+      { href: '/settings', label: 'Ajustes', icon: Settings },
+    ],
+  },
+];
+
+export function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-56 border-r bg-card h-screen sticky top-0 flex flex-col">
+      <div className="px-4 py-5 border-b">
+        <div className="font-bold">◆ Finanzas</div>
+      </div>
+      <nav className="flex-1 overflow-y-auto py-3">
+        {SECTIONS.map((section) => (
+          <div key={section.label} className="mb-4">
+            <div className="px-4 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{section.label}</div>
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const active = pathname.startsWith(item.href);
+              if ((item as { disabled?: boolean }).disabled) {
+                return (
+                  <div
+                    key={item.href}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground/50 cursor-not-allowed"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                    <span className="ml-auto text-[9px]">Pronto</span>
+                  </div>
+                );
+              }
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2 px-4 py-2 text-sm border-l-2 border-transparent hover:bg-muted',
+                    active && 'bg-muted border-foreground font-semibold'
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+}
