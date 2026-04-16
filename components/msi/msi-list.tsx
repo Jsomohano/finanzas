@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -11,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import type { MsiPurchaseWithAccount } from '@/lib/db/types';
 import { monthlyAmount, monthsRemaining } from '@/lib/msi/calculations';
@@ -40,8 +47,29 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
   const nowMonth = currentMonthMX();
   const [confirming, setConfirming] = useState<string | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [filterAccount, setFilterAccount] = useState<string>('all');
+  const [filterMerchant, setFilterMerchant] = useState<string>('all');
   const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const router = useRouter();
+
+  const accounts = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of purchases) {
+      if (p.accounts) {
+        const label = p.accounts.name + (p.accounts.last_four ? ` ···${p.accounts.last_four}` : '');
+        seen.set(p.accounts.id, label);
+      }
+    }
+    return Array.from(seen.entries());
+  }, [purchases]);
+
+  const merchants = useMemo(() => {
+    const seen = new Set<string>();
+    for (const p of purchases) {
+      if (p.merchant) seen.add(p.merchant);
+    }
+    return Array.from(seen).sort();
+  }, [purchases]);
 
   const handleCancel = useCallback((id: string) => {
     setConfirming(null);
@@ -83,6 +111,18 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
     undoTimers.current.set(id, timer);
   }, [router]);
 
+  const visible = useMemo(() =>
+    purchases.filter((p) => {
+      if (hidden.has(p.id)) return false;
+      if (filterAccount !== 'all' && p.accounts?.id !== filterAccount) return false;
+      if (filterMerchant !== 'all' && p.merchant !== filterMerchant) return false;
+      return true;
+    }),
+    [purchases, hidden, filterAccount, filterMerchant]
+  );
+
+  const hasFilters = accounts.length > 1 || merchants.length > 1;
+
   if (purchases.length === 0) {
     return (
       <div className="py-12 text-center">
@@ -95,6 +135,55 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
   }
 
   return (
+    <div className="space-y-3">
+      {hasFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          {accounts.length > 1 && (
+            <Select value={filterAccount} onValueChange={setFilterAccount}>
+              <SelectTrigger className="h-8 w-48 text-xs">
+                <SelectValue placeholder="Tarjeta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las tarjetas</SelectItem>
+                {accounts.map(([id, label]) => (
+                  <SelectItem key={id} value={id}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {merchants.length > 1 && (
+            <Select value={filterMerchant} onValueChange={setFilterMerchant}>
+              <SelectTrigger className="h-8 w-48 text-xs">
+                <SelectValue placeholder="Comercio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los comercios</SelectItem>
+                {merchants.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {(filterAccount !== 'all' || filterMerchant !== 'all') && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs text-muted-foreground"
+              onClick={() => { setFilterAccount('all'); setFilterMerchant('all'); }}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+          <span className="ml-auto text-xs text-muted-foreground">
+            {visible.length} de {purchases.length - hidden.size} resultado{visible.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
+      {!hasFilters && (
+        <p className="text-xs text-muted-foreground text-right">
+          {visible.length} resultado{visible.length !== 1 ? 's' : ''}
+        </p>
+      )}
     <Table>
       <TableHeader>
         <TableRow>
@@ -108,7 +197,7 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {purchases.filter((p) => !hidden.has(p.id)).map((p) => {
+        {visible.map((p) => {
           const per = monthlyAmount(p);
           const paid = paidInstallments(p, nowMonth);
           return (
@@ -161,5 +250,11 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
         })}
       </TableBody>
     </Table>
+    {visible.length === 0 && (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        Sin resultados con los filtros seleccionados.
+      </p>
+    )}
+    </div>
   );
 }
