@@ -55,9 +55,9 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
   const accounts = useMemo(() => {
     const seen = new Map<string, string>();
     for (const p of purchases) {
-      if (p.accounts) {
+      if (p.accounts && p.account_id) {
         const label = p.accounts.name + (p.accounts.last_four ? ` ···${p.accounts.last_four}` : '');
-        seen.set(p.accounts.id, label);
+        seen.set(p.account_id, label);
       }
     }
     return Array.from(seen.entries());
@@ -114,7 +114,7 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
   const visible = useMemo(() =>
     purchases.filter((p) => {
       if (hidden.has(p.id)) return false;
-      if (filterAccount !== 'all' && p.accounts?.id !== filterAccount) return false;
+      if (filterAccount !== 'all' && p.account_id !== filterAccount) return false;
       if (filterMerchant !== 'all' && p.merchant !== filterMerchant) return false;
       return true;
     }),
