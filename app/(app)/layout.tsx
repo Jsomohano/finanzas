@@ -1,5 +1,4 @@
-import { Sidebar } from '@/components/shared/sidebar';
-import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { AppShell } from '@/components/shared/app-shell';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -8,15 +7,5 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-6">
-        <div className="flex justify-end mb-4">
-          <ThemeToggle />
-        </div>
-        {children}
-      </main>
-    </div>
-  );
+  return <AppShell>{children}</AppShell>;
 }
