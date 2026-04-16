@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createMsiPurchase, updateMsiPurchase } from '@/app/(app)/msi/actions';
+import { HelpTip } from '@/components/ui/help-tip';
 import type { Account, Category, MsiPurchaseRow } from '@/lib/db/types';
 
 const INSTALLMENT_OPTIONS = [3, 6, 9, 12, 18, 24, 36];
@@ -65,7 +66,10 @@ export function MsiForm({
           <Input id="total_amount" name="total_amount" type="number" step="0.01" required defaultValue={initialData?.total_amount} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="installments">Mensualidades</Label>
+          <Label htmlFor="installments" className="flex items-center gap-1">
+            Mensualidades
+            <HelpTip text="Número de pagos fijos en que se divide la compra. Sin intereses si pagas a tiempo cada mes." />
+          </Label>
           <Select name="installments" defaultValue={String(initialData?.installments ?? 12)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -83,7 +87,10 @@ export function MsiForm({
           <Input id="purchase_date" name="purchase_date" type="date" defaultValue={initialData?.purchase_date ?? today} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="first_payment_month">¿En qué mes se empieza a pagar?</Label>
+          <Label htmlFor="first_payment_month" className="flex items-center gap-1">
+            Primer pago
+            <HelpTip text="Mes en que aparece el primer cargo en tu estado de cuenta. Generalmente el mes siguiente a la compra." />
+          </Label>
           <Input
             id="first_payment_month"
             name="first_payment_month"

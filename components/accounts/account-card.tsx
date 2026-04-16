@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { deleteAccount } from '@/app/(app)/accounts/actions';
 import { AccountForm } from './account-form';
+import { HelpTip } from '@/components/ui/help-tip';
 import type { Account } from '@/lib/db/types';
 
 const TYPE_LABEL: Record<Account['type'], string> = {
@@ -89,8 +90,9 @@ export function AccountCard({ account }: { account: Account }) {
             <p className="text-xs text-muted-foreground">•••• {account.last_four}</p>
           )}
           {account.type === 'credit' && account.closing_day && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
               Corte día {account.closing_day} · Pago día {account.payment_day}
+              <HelpTip text="Corte: fecha en que el banco cierra el periodo y genera tu estado de cuenta. Pago: fecha límite para pagar sin intereses." />
             </p>
           )}
           <div className="mt-3 flex gap-2">

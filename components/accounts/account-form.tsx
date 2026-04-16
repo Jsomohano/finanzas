@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createAccount, updateAccount } from '@/app/(app)/accounts/actions';
+import { HelpTip } from '@/components/ui/help-tip';
 import type { Account } from '@/lib/db/types';
 
 export function AccountForm({ initial, onDone }: { initial?: Account; onDone?: () => void }) {
@@ -68,12 +69,18 @@ export function AccountForm({ initial, onDone }: { initial?: Account; onDone?: (
       {type === 'credit' && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="closing_day">Día de corte</Label>
-            <Input id="closing_day" name="closing_day" type="number" min={1} max={31} defaultValue={initial?.closing_day ?? ''} />
+            <Label htmlFor="closing_day" className="flex items-center gap-1">
+              Día de corte
+              <HelpTip text="Día del mes en que el banco cierra el periodo y genera tu estado de cuenta." />
+            </Label>
+            <Input id="closing_day" name="closing_day" type="number" min={1} max={31} defaultValue={initial?.closing_day ?? ''} placeholder="Ej. 15" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="payment_day">Día de pago</Label>
-            <Input id="payment_day" name="payment_day" type="number" min={1} max={31} defaultValue={initial?.payment_day ?? ''} />
+            <Label htmlFor="payment_day" className="flex items-center gap-1">
+              Día de pago
+              <HelpTip text="Fecha límite para pagar el saldo sin generar intereses." />
+            </Label>
+            <Input id="payment_day" name="payment_day" type="number" min={1} max={31} defaultValue={initial?.payment_day ?? ''} placeholder="Ej. 10" />
           </div>
         </div>
       )}

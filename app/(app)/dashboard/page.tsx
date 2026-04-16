@@ -106,6 +106,7 @@ export default async function DashboardPage() {
         />
         <KpiCard
           label="Comprometido en MSI"
+          tooltip="Meses Sin Intereses: suma de las mensualidades de tus compras a meses este mes."
           value={fmt(msiThisMonthTotal)}
           sub={`${msiPurchases.length} ${msiPurchases.length === 1 ? 'compra activa' : 'compras activas'}`}
         />

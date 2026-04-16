@@ -1,13 +1,16 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { HelpTip } from '@/components/ui/help-tip';
 
 export function KpiCard({
   label,
+  tooltip,
   value,
   sub,
   subTone,
   progressPct,
 }: {
   label: string;
+  tooltip?: string;
   value: string;
   sub?: string;
   subTone?: 'positive' | 'negative' | 'neutral';
@@ -16,8 +19,9 @@ export function KpiCard({
   return (
     <Card>
       <CardHeader className="pb-1">
-        <div className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+        <div className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
           {label}
+          {tooltip && <HelpTip text={tooltip} />}
         </div>
       </CardHeader>
       <CardContent>
