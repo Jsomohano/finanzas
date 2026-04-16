@@ -11,21 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createTransaction } from '@/app/(app)/transactions/actions';
-import type { Account, Category } from '@/lib/db/types';
+import { createTransaction, updateTransaction } from '@/app/(app)/transactions/actions';
+import type { Account, Category, Transaction } from '@/lib/db/types';
 
 export function TransactionForm({
   accounts,
   expenseCategories,
   incomeCategories,
+  initial,
   onDone,
 }: {
   accounts: Account[];
   expenseCategories: Category[];
   incomeCategories: Category[];
+  initial?: Transaction;
   onDone?: () => void;
 }) {
-  const [kind, setKind] = useState<'expense' | 'income'>('expense');
+  const [kind, setKind] = useState<'expense' | 'income'>(initial?.kind ?? 'expense');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -35,7 +37,9 @@ export function TransactionForm({
   async function action(formData: FormData) {
     setPending(true);
     setError(null);
-    const result = await createTransaction(formData);
+    const result = initial
+      ? await updateTransaction(initial.id, formData)
+      : await createTransaction(formData);
     setPending(false);
     if (result.error) setError(result.error);
     else onDone?.();
@@ -51,23 +55,23 @@ export function TransactionForm({
 
       <div className="space-y-2">
         <Label htmlFor="description">Descripción</Label>
-        <Input id="description" name="description" required />
+        <Input id="description" name="description" required defaultValue={initial?.description} />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="amount">Monto</Label>
-          <Input id="amount" name="amount" type="number" step="0.01" required />
+          <Input id="amount" name="amount" type="number" step="0.01" required defaultValue={initial?.amount} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="date">Fecha</Label>
-          <Input id="date" name="date" type="date" defaultValue={today} required />
+          <Input id="date" name="date" type="date" defaultValue={initial?.date ?? today} required />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="category_id">Categoría</Label>
-        <Select name="category_id" required>
+        <Select name="category_id" required defaultValue={initial?.category_id}>
           <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
           <SelectContent>
             {categories.map((c) => (
@@ -79,7 +83,7 @@ export function TransactionForm({
 
       <div className="space-y-2">
         <Label htmlFor="account_id">Cuenta</Label>
-        <Select name="account_id" required>
+        <Select name="account_id" required defaultValue={initial?.account_id ?? undefined}>
           <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
           <SelectContent>
             {accounts.map((a) => (

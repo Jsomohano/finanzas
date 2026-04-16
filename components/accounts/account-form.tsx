@@ -11,17 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createAccount } from '@/app/(app)/accounts/actions';
+import { createAccount, updateAccount } from '@/app/(app)/accounts/actions';
 import type { Account } from '@/lib/db/types';
 
 export function AccountForm({ initial, onDone }: { initial?: Account; onDone?: () => void }) {
+  const [type, setType] = useState<Account['type']>(initial?.type ?? 'debit');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function action(formData: FormData) {
     setPending(true);
     setError(null);
-    const result = await createAccount(formData);
+    const result = initial
+      ? await updateAccount(initial.id, formData)
+      : await createAccount(formData);
     setPending(false);
     if (result.error) setError(result.error);
     else onDone?.();
@@ -36,7 +39,7 @@ export function AccountForm({ initial, onDone }: { initial?: Account; onDone?: (
 
       <div className="space-y-2">
         <Label htmlFor="type">Tipo</Label>
-        <Select name="type" defaultValue={initial?.type ?? 'debit'}>
+        <Select name="type" value={type} onValueChange={(v) => setType(v as Account['type'])}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="debit">Débito</SelectItem>
@@ -62,16 +65,18 @@ export function AccountForm({ initial, onDone }: { initial?: Account; onDone?: (
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="closing_day">Día de corte</Label>
-          <Input id="closing_day" name="closing_day" type="number" min={1} max={31} defaultValue={initial?.closing_day ?? ''} />
+      {type === 'credit' && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="closing_day">Día de corte</Label>
+            <Input id="closing_day" name="closing_day" type="number" min={1} max={31} defaultValue={initial?.closing_day ?? ''} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="payment_day">Día de pago</Label>
+            <Input id="payment_day" name="payment_day" type="number" min={1} max={31} defaultValue={initial?.payment_day ?? ''} />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="payment_day">Día de pago</Label>
-          <Input id="payment_day" name="payment_day" type="number" min={1} max={31} defaultValue={initial?.payment_day ?? ''} />
-        </div>
-      </div>
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" disabled={pending}>{pending ? 'Guardando…' : 'Guardar'}</Button>

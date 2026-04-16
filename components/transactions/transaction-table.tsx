@@ -12,8 +12,15 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { deleteTransaction } from '@/app/(app)/transactions/actions';
+import { TransactionForm } from './transaction-form';
 import type { Transaction, Category, Account } from '@/lib/db/types';
 
 export function TransactionTable({
@@ -27,8 +34,12 @@ export function TransactionTable({
 }) {
   const catMap = new Map(categories.map((c) => [c.id, c]));
   const accMap = new Map(accounts.map((a) => [a.id, a]));
+  const expenseCategories = categories.filter((c) => c.kind === 'expense');
+  const incomeCategories = categories.filter((c) => c.kind === 'income');
+
   const [confirming, setConfirming] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Transaction | null>(null);
   const router = useRouter();
 
   async function handleDelete(id: string) {
@@ -44,6 +55,12 @@ export function TransactionTable({
     setPending(null);
   }
 
+  function onEditDone() {
+    setEditing(null);
+    router.refresh();
+    toast.success('Transacción actualizada');
+  }
+
   if (transactions.length === 0) {
     return (
       <div className="py-16 text-center">
@@ -56,75 +73,106 @@ export function TransactionTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Fecha</TableHead>
-          <TableHead>Descripción</TableHead>
-          <TableHead>Categoría</TableHead>
-          <TableHead>Cuenta</TableHead>
-          <TableHead className="text-right">Monto</TableHead>
-          <TableHead></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {transactions.map((t) => {
-          const cat = catMap.get(t.category_id);
-          const acc = t.account_id ? accMap.get(t.account_id) : null;
-          const isDeletable = t.source !== 'msi_aggregate';
-          return (
-            <TableRow key={t.id}>
-              <TableCell className="text-xs">{t.date}</TableCell>
-              <TableCell>
-                {t.description}
-                {t.source === 'msi_aggregate' && (
-                  <Badge variant="secondary" className="ml-2">MSI</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-xs">{cat?.name ?? '—'}</TableCell>
-              <TableCell className="text-xs">{acc?.name ?? '—'}</TableCell>
-              <TableCell className="text-right font-mono">
-                <span className={t.kind === 'expense' ? 'text-negative' : 'text-positive'}>
-                  {t.kind === 'expense' ? '−' : '+'}${Number(t.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                </span>
-              </TableCell>
-              <TableCell>
-                {isDeletable && (
-                  confirming === t.id ? (
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Fecha</TableHead>
+            <TableHead>Descripción</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Cuenta</TableHead>
+            <TableHead className="text-right">Monto</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((t) => {
+            const cat = catMap.get(t.category_id);
+            const acc = t.account_id ? accMap.get(t.account_id) : null;
+            const isEditable = t.source !== 'msi_aggregate';
+            return (
+              <TableRow key={t.id}>
+                <TableCell className="text-xs">{t.date}</TableCell>
+                <TableCell>
+                  {t.description}
+                  {t.source === 'msi_aggregate' && (
+                    <Badge variant="secondary" className="ml-2">MSI</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-xs">{cat?.name ?? '—'}</TableCell>
+                <TableCell className="text-xs">{acc?.name ?? '—'}</TableCell>
+                <TableCell className="text-right font-mono">
+                  <span className={t.kind === 'expense' ? 'text-negative' : 'text-positive'}>
+                    {t.kind === 'expense' ? '−' : '+'}${Number(t.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {isEditable && (
                     <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={pending === t.id}
-                        onClick={() => handleDelete(t.id)}
-                      >
-                        {pending === t.id ? '…' : 'Sí'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled={pending === t.id}
-                        onClick={() => setConfirming(null)}
-                      >
-                        No
-                      </Button>
+                      {confirming === t.id ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={pending === t.id}
+                            onClick={() => handleDelete(t.id)}
+                          >
+                            {pending === t.id ? '…' : 'Sí'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={pending === t.id}
+                            onClick={() => setConfirming(null)}
+                          >
+                            No
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground"
+                            onClick={() => setEditing(t)}
+                          >
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => setConfirming(t.id)}
+                          >
+                            Borrar
+                          </Button>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => setConfirming(t.id)}
-                    >
-                      Borrar
-                    </Button>
-                  )
-                )}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+
+      <Dialog open={!!editing} onOpenChange={(open) => { if (!open) setEditing(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar transacción</DialogTitle>
+          </DialogHeader>
+          {editing && (
+            <TransactionForm
+              accounts={accounts}
+              expenseCategories={expenseCategories}
+              incomeCategories={incomeCategories}
+              initial={editing}
+              onDone={onEditDone}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
