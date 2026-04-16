@@ -1,6 +1,6 @@
 export type AccountType = 'debit' | 'credit' | 'cash';
 export type TxKind = 'expense' | 'income';
-export type TxSource = 'manual' | 'msi_aggregate';
+export type TxSource = 'manual' | 'msi_aggregate' | 'msi_installment';
 export type MsiStatus = 'active' | 'completed' | 'cancelled';
 
 export type Account = {
@@ -42,6 +42,7 @@ export type Transaction = {
   notes: string | null;
   source: TxSource;
   msi_aggregate_month: string | null;
+  msi_purchase_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -58,6 +59,23 @@ export type MsiPurchaseRow = {
   account_id: string;
   category_id: string;
   status: MsiStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MsiPurchaseWithAccount = MsiPurchaseRow & {
+  accounts: { name: string; last_four: string | null; closing_day: number | null } | null;
+};
+
+export type Transfer = {
+  id: string;
+  user_id: string;
+  date: string;
+  amount: number;
+  from_account_id: string;
+  to_account_id: string;
+  description: string;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 };

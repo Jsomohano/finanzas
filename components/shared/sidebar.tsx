@@ -11,6 +11,7 @@ import {
   Wallet,
   BarChart3,
   Settings,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +35,7 @@ const SECTIONS = [
     items: [
       { href: '/investments', label: 'Inversiones', icon: TrendingUp, disabled: true },
       { href: '/accounts', label: 'Cuentas', icon: Wallet },
+      { href: '/transfers', label: 'Transferencias', icon: ArrowRightLeft },
     ],
   },
   {

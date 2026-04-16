@@ -3,14 +3,14 @@ import { listAccounts } from '@/lib/db/accounts';
 import { listCategories } from '@/lib/db/categories';
 import { TransactionTable } from '@/components/transactions/transaction-table';
 import { TransactionDialog } from '@/components/transactions/transaction-dialog';
-import { ensureCurrentMonthMsiAggregate } from '@/lib/db/msi-aggregate-action';
+import { syncMsiInstallments } from '@/lib/db/msi-installments-action';
 
 export default async function TransactionsPage({
   searchParams,
 }: {
   searchParams: { category?: string };
 }) {
-  await ensureCurrentMonthMsiAggregate();
+  await syncMsiInstallments();
   const [transactions, accounts, expenseCats, incomeCats] = await Promise.all([
     listTransactions({ limit: 100, categoryId: searchParams.category }),
     listAccounts(),

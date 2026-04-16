@@ -12,34 +12,44 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { MsiForm } from './msi-form';
-import type { Account, Category } from '@/lib/db/types';
+import type { Account, Category, MsiPurchaseRow } from '@/lib/db/types';
 
 export function MsiDialog({
   accounts,
   categories,
+  initialData,
+  trigger,
 }: {
   accounts: Account[];
   categories: Category[];
+  initialData?: MsiPurchaseRow;
+  trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const isEditing = !!initialData;
 
   function onDone() {
     setOpen(false);
     router.refresh();
-    toast.success('Compra MSI registrada');
+    toast.success(isEditing ? 'Compra MSI actualizada' : 'Compra MSI registrada');
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>+ Nueva compra MSI</Button>
+        {trigger ?? <Button>+ Nueva compra MSI</Button>}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nueva compra a MSI</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar compra MSI' : 'Nueva compra a MSI'}</DialogTitle>
         </DialogHeader>
-        <MsiForm accounts={accounts} categories={categories} onDone={onDone} />
+        <MsiForm
+          accounts={accounts}
+          categories={categories}
+          initialData={initialData}
+          onDone={onDone}
+        />
       </DialogContent>
     </Dialog>
   );

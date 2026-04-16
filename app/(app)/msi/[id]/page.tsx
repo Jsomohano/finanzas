@@ -1,19 +1,49 @@
 import { notFound } from 'next/navigation';
 import { getMsiPurchase } from '@/lib/db/msi';
+import { listAccounts } from '@/lib/db/accounts';
+import { listCategories } from '@/lib/db/categories';
 import { MsiCalendar } from '@/components/msi/msi-calendar';
+import { MsiDialog } from '@/components/msi/msi-dialog';
 import { monthlyAmount } from '@/lib/msi/calculations';
+import { Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default async function MsiDetailPage({ params }: { params: { id: string } }) {
-  const purchase = await getMsiPurchase(params.id);
+  const [purchase, accounts, categories] = await Promise.all([
+    getMsiPurchase(params.id),
+    listAccounts(),
+    listCategories('expense'),
+  ]);
   if (!purchase) notFound();
 
   const per = monthlyAmount(purchase);
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold">{purchase.description}</h1>
-        <p className="text-sm text-muted-foreground">{purchase.merchant}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">{purchase.description}</h1>
+          <p className="text-sm text-muted-foreground">{purchase.merchant}</p>
+          {purchase.accounts && (
+            <p className="text-sm text-muted-foreground">
+              Tarjeta: {purchase.accounts.name}
+              {purchase.accounts.last_four ? ` ···${purchase.accounts.last_four}` : ''}
+            </p>
+          )}
+        </div>
+        {purchase.status === 'active' && (
+          <MsiDialog
+            accounts={accounts}
+            categories={categories}
+            initialData={purchase}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Pencil className="h-4 w-4 mr-1" />
+                Editar
+              </Button>
+            }
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">

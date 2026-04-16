@@ -12,13 +12,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import type { MsiPurchaseRow } from '@/lib/db/types';
+import type { MsiPurchaseWithAccount } from '@/lib/db/types';
 import { monthlyAmount, monthsRemaining } from '@/lib/msi/calculations';
 import { currentMonthMX } from '@/lib/dates/month-mx';
 import { toast } from 'sonner';
 import { cancelMsiPurchase } from '@/app/(app)/msi/actions';
 
-export function MsiList({ purchases }: { purchases: MsiPurchaseRow[] }) {
+export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) {
   const nowMonth = currentMonthMX();
   const [confirming, setConfirming] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -54,6 +54,7 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseRow[] }) {
         <TableRow>
           <TableHead>Descripción</TableHead>
           <TableHead>Comercio</TableHead>
+          <TableHead>Tarjeta</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-right">Mensualidad</TableHead>
           <TableHead>Progreso</TableHead>
@@ -72,6 +73,10 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseRow[] }) {
             <TableRow key={p.id}>
               <TableCell className="font-medium">{p.description}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{p.merchant ?? '—'}</TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {p.accounts?.name ?? '—'}
+                {p.accounts?.last_four ? ` ···${p.accounts.last_four}` : ''}
+              </TableCell>
               <TableCell className="text-right font-mono">${p.total_amount.toLocaleString('es-MX')}</TableCell>
               <TableCell className="text-right font-mono">${per.toLocaleString('es-MX')}</TableCell>
               <TableCell>{paid}/{p.installments}</TableCell>

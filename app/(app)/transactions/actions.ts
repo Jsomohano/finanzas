@@ -77,7 +77,7 @@ export async function updateTransaction(id: string, formData: FormData) {
     .eq('id', id)
     .maybeSingle();
 
-  if (old?.source === 'msi_aggregate') {
+  if (old?.source === 'msi_aggregate' || old?.source === 'msi_installment') {
     return { error: 'Los pagos MSI se editan desde la compra MSI original' };
   }
 
@@ -105,8 +105,8 @@ export async function deleteTransaction(id: string) {
     .eq('id', id)
     .maybeSingle();
 
-  if (existing?.source === 'msi_aggregate') {
-    return { error: 'No se puede borrar un agregado MSI directamente' };
+  if (existing?.source === 'msi_aggregate' || existing?.source === 'msi_installment') {
+    return { error: 'No se puede borrar un pago MSI directamente' };
   }
 
   if (existing) {

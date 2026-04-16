@@ -3,7 +3,7 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { CategoryDonut, type CategorySlice } from '@/components/dashboard/category-donut';
 import { TrendSparkline, type TrendPoint } from '@/components/dashboard/trend-sparkline';
 import { MsiProjection } from '@/components/dashboard/msi-projection';
-import { ensureCurrentMonthMsiAggregate } from '@/lib/db/msi-aggregate-action';
+import { syncMsiInstallments } from '@/lib/db/msi-installments-action';
 import { ensureCurrentMonthGoal } from '@/lib/db/goals';
 import { listMsiPurchases } from '@/lib/db/msi';
 import { listCategories } from '@/lib/db/categories';
@@ -12,7 +12,7 @@ import { projectionForMonths, monthlyAmount, type MsiPurchase } from '@/lib/msi/
 import { currentMonthMX, addMonthsMX } from '@/lib/dates/month-mx';
 
 export default async function DashboardPage() {
-  await ensureCurrentMonthMsiAggregate();
+  await syncMsiInstallments();
   const goal = await ensureCurrentMonthGoal();
   const supabase = createClient();
 

@@ -26,9 +26,20 @@ export const msiPurchaseSchema = z.object({
   total_amount: z.coerce.number().positive(),
   installments: z.coerce.number().int().min(2).max(48),
   purchase_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  first_payment_month: z.string().regex(/^\d{4}-\d{2}-01$/, 'Debe ser primer día del mes'),
+  first_payment_month: z.string()
+    .regex(/^\d{4}-\d{2}(-01)?$/, 'Formato YYYY-MM o YYYY-MM-01')
+    .transform((v) => v.length === 7 ? `${v}-01` : v),
   account_id: z.string().uuid(),
   category_id: z.string().uuid(),
+});
+
+export const transferSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha YYYY-MM-DD'),
+  amount: z.coerce.number().positive('Debe ser positivo'),
+  from_account_id: z.string().uuid(),
+  to_account_id: z.string().uuid(),
+  description: z.string().min(1).max(200),
+  notes: z.string().max(500).optional().nullable(),
 });
 
 export const monthlyGoalSchema = z.object({
@@ -39,4 +50,5 @@ export const monthlyGoalSchema = z.object({
 export type AccountInput = z.infer<typeof accountSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
 export type MsiPurchaseInput = z.infer<typeof msiPurchaseSchema>;
+export type TransferInput = z.infer<typeof transferSchema>;
 export type MonthlyGoalInput = z.infer<typeof monthlyGoalSchema>;
