@@ -58,12 +58,12 @@ export default async function DashboardPage() {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 6);
 
-  const trend: TrendPoint[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const m = addMonthsMX(month, -i);
-    const { expenses } = await getMonthSummary(m);
-    trend.push({ month: m.slice(5, 7), total: expenses });
-  }
+  const trendMonths = Array.from({ length: 6 }, (_, i) => addMonthsMX(month, i - 5));
+  const trendSummaries = await Promise.all(trendMonths.map((m) => getMonthSummary(m)));
+  const trend: TrendPoint[] = trendMonths.map((m, i) => ({
+    month: m.slice(5, 7),
+    total: trendSummaries[i].expenses,
+  }));
 
   const projection = projectionForMonths(msiPurchases, month, 12);
 
