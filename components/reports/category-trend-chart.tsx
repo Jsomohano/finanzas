@@ -31,7 +31,7 @@ export function CategoryTrendChart({ data }: Props) {
   }
 
   // Get unique months and top-5 categories by total spend
-  const months = [...new Set(data.map((d) => d.month))].sort();
+  const months = Array.from(new Set(data.map((d) => d.month))).sort();
   const catTotals: Record<string, { name: string; color: string; total: number }> = {};
   for (const d of data) {
     if (!catTotals[d.categoryId]) {
