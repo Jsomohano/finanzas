@@ -51,12 +51,14 @@ export function Sidebar() {
   return (
     <aside className="w-56 border-r bg-card h-screen sticky top-0 flex flex-col">
       <div className="px-4 py-5 border-b">
-        <div className="font-bold">◆ Finanzas</div>
+        <div className="font-display font-bold text-base tracking-tight">Finanzas</div>
       </div>
       <nav className="flex-1 overflow-y-auto py-3">
         {SECTIONS.map((section) => (
           <div key={section.label} className="mb-4">
-            <div className="px-4 text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{section.label}</div>
+            <div className="px-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+              {section.label}
+            </div>
             {section.items.map((item) => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
@@ -64,11 +66,11 @@ export function Sidebar() {
                 return (
                   <div
                     key={item.href}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground/50 cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground/40 cursor-not-allowed"
                   >
                     <Icon className="h-4 w-4" />
                     {item.label}
-                    <span className="ml-auto text-[9px]">Pronto</span>
+                    <span className="ml-auto text-[9px] tracking-wider">Pronto</span>
                   </div>
                 );
               }
@@ -77,8 +79,10 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2 text-sm border-l-2 border-transparent hover:bg-muted',
-                    active && 'bg-muted border-foreground font-semibold'
+                    'flex items-center gap-2 px-4 py-2 text-sm rounded-none transition-colors hover:bg-muted',
+                    active
+                      ? 'bg-foreground text-background font-semibold'
+                      : 'text-foreground/70'
                   )}
                 >
                   <Icon className="h-4 w-4" />

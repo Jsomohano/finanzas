@@ -1,3 +1,7 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -7,12 +11,42 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import type { MsiPurchaseRow } from '@/lib/db/types';
 import { monthlyAmount, monthsRemaining } from '@/lib/msi/calculations';
 import { currentMonthMX } from '@/lib/dates/month-mx';
+import { toast } from 'sonner';
+import { cancelMsiPurchase } from '@/app/(app)/msi/actions';
 
 export function MsiList({ purchases }: { purchases: MsiPurchaseRow[] }) {
   const nowMonth = currentMonthMX();
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleCancel(id: string) {
+    setPending(id);
+    const result = await cancelMsiPurchase(id);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success('Compra MSI cancelada');
+      router.refresh();
+    }
+    setConfirming(null);
+    setPending(null);
+  }
+
+  if (purchases.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground text-sm">Sin compras en esta categoría.</p>
+        <p className="text-muted-foreground/60 text-xs mt-1">
+          Las compras MSI activas aparecen aquí con su calendario de pagos.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Table>
@@ -41,7 +75,42 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseRow[] }) {
               <TableCell className="text-right font-mono">${p.total_amount.toLocaleString('es-MX')}</TableCell>
               <TableCell className="text-right font-mono">${per.toLocaleString('es-MX')}</TableCell>
               <TableCell>{paid}/{p.installments}</TableCell>
-              <TableCell><Link href={`/msi/${p.id}`} className="text-sm underline">Detalle</Link></TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Link href={`/msi/${p.id}`} className="text-sm underline">Detalle</Link>
+                  {p.status === 'active' && (
+                    confirming === p.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={pending === p.id}
+                          onClick={() => handleCancel(p.id)}
+                        >
+                          {pending === p.id ? '…' : 'Cancelar MSI'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending === p.id}
+                          onClick={() => setConfirming(null)}
+                        >
+                          No
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => setConfirming(p.id)}
+                      >
+                        Cancelar
+                      </Button>
+                    )
+                  )}
+                </div>
+              </TableCell>
             </TableRow>
           );
         })}

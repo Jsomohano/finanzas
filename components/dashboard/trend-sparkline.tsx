@@ -16,16 +16,19 @@ export function TrendSparkline({ points }: { points: TrendPoint[] }) {
         <CardTitle className="text-sm">Tendencia 6 meses</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[90px]">
+        <div className="h-[90px] text-primary">
           <ResponsiveContainer>
-            <BarChart data={points}>
-              <XAxis dataKey="month" tick={{ fontSize: 9 }} />
-              <Bar dataKey="total" fill="currentColor" radius={[2, 2, 0, 0]} />
+            <BarChart data={points} barCategoryGap="30%">
+              <XAxis dataKey="month" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+              <Bar dataKey="total" fill="currentColor" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="text-xs text-muted-foreground mt-2">
-          Promedio ${Math.round(avg).toLocaleString('es-MX')} · Este mes {delta >= 0 ? '+' : ''}{delta.toFixed(0)}%
+        <div className="text-xs text-muted-foreground mt-1">
+          Promedio ${Math.round(avg).toLocaleString('es-MX')} ·{' '}
+          <span className={delta >= 0 ? 'text-positive' : 'text-negative'}>
+            {delta >= 0 ? '+' : ''}{delta.toFixed(0)}% este mes
+          </span>
         </div>
       </CardContent>
     </Card>

@@ -2,45 +2,44 @@ import { listTransactions } from '@/lib/db/transactions';
 import { listAccounts } from '@/lib/db/accounts';
 import { listCategories } from '@/lib/db/categories';
 import { TransactionTable } from '@/components/transactions/transaction-table';
-import { TransactionForm } from '@/components/transactions/transaction-form';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { TransactionDialog } from '@/components/transactions/transaction-dialog';
 import { ensureCurrentMonthMsiAggregate } from '@/lib/db/msi-aggregate-action';
 
-export default async function TransactionsPage() {
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: { category?: string };
+}) {
   await ensureCurrentMonthMsiAggregate();
   const [transactions, accounts, expenseCats, incomeCats] = await Promise.all([
-    listTransactions({ limit: 100 }),
+    listTransactions({ limit: 100, categoryId: searchParams.category }),
     listAccounts(),
     listCategories('expense'),
     listCategories('income'),
   ]);
   const categories = [...expenseCats, ...incomeCats];
+  const activeCategory = searchParams.category
+    ? categories.find((c) => c.id === searchParams.category)
+    : null;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Transacciones</h1>
-          <p className="text-sm text-muted-foreground">Todos tus ingresos y gastos.</p>
+          {activeCategory ? (
+            <p className="text-sm text-muted-foreground">
+              Filtrando por <span className="font-medium text-foreground">{activeCategory.name}</span>
+              {' — '}
+              <a href="/transactions" className="underline underline-offset-2 hover:text-foreground">
+                ver todas
+              </a>
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">Todos tus ingresos y gastos.</p>
+          )}
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>+ Nueva transacción</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nueva transacción</DialogTitle>
-            </DialogHeader>
-            <TransactionForm accounts={accounts} expenseCategories={expenseCats} incomeCategories={incomeCats} />
-          </DialogContent>
-        </Dialog>
+        <TransactionDialog accounts={accounts} expenseCategories={expenseCats} incomeCategories={incomeCats} />
       </div>
 
       <TransactionTable transactions={transactions} categories={categories} accounts={accounts} />

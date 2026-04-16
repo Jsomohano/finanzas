@@ -15,15 +15,17 @@ export function KpiCard({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <CardHeader className="pb-1">
+        <div className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+          {label}
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="kpi-value text-[1.75rem] leading-none">{value}</div>
         {progressPct !== undefined && (
-          <div className="h-1.5 bg-muted rounded mt-2 overflow-hidden">
+          <div className="h-1 bg-muted rounded-full mt-3 overflow-hidden">
             <div
-              className="h-full bg-foreground"
+              className={`h-full rounded-full transition-all ${progressPct > 100 ? 'bg-fin-negative' : 'bg-primary'}`}
               style={{ width: `${Math.min(100, progressPct)}%` }}
             />
           </div>
@@ -31,11 +33,11 @@ export function KpiCard({
         {sub && (
           <div
             className={
-              'text-xs mt-1 ' +
+              'text-xs mt-2 ' +
               (subTone === 'positive'
-                ? 'text-green-600'
+                ? 'text-positive'
                 : subTone === 'negative'
-                ? 'text-destructive'
+                ? 'text-negative'
                 : 'text-muted-foreground')
             }
           >

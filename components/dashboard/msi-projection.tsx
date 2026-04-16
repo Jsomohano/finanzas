@@ -23,16 +23,17 @@ export function MsiProjection({
         <CardTitle className="text-sm">Proyección MSI próximos 12 meses</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[140px]">
+        <div className="h-[140px] text-primary">
           <ResponsiveContainer>
-            <BarChart data={data}>
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
+            <BarChart data={data} barCategoryGap="30%">
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={60} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip
-                formatter={(v) => `$${Number(v).toLocaleString('es-MX')}`}
+                formatter={(v) => [`$${Number(v).toLocaleString('es-MX')}`, 'MSI']}
                 labelFormatter={(_, payload) => payload?.[0]?.payload?.fullMonth ?? ''}
+                contentStyle={{ fontSize: 12, borderRadius: 6 }}
               />
-              <Bar dataKey="amount" fill="currentColor" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="amount" fill="currentColor" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -67,46 +67,50 @@ export default async function DashboardPage() {
 
   const projection = projectionForMonths(msiPurchases, month, 12);
 
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-MX')}`;
+
   const maxMonth = projection.reduce((a, b) => (b.amount > a.amount ? b : a), projection[0]);
   const narrative = maxMonth.amount > 0
-    ? `El pago más alto es en ${maxMonth.month.slice(0, 7)} ($${maxMonth.amount.toLocaleString('es-MX')}).`
-    : 'No hay compras MSI activas.';
+    ? `Pico en ${new Date(`${maxMonth.month}-01T12:00:00Z`).toLocaleDateString('es-MX', { month: 'long', timeZone: 'America/Mexico_City' })} — prepárate con ${fmt(maxMonth.amount)}.`
+    : 'Sin compromisos MSI activos este periodo.';
 
-  const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-MX')}`;
+  const monthLabel = new Date(`${month}T12:00:00Z`).toLocaleDateString('es-MX', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'America/Mexico_City',
+  });
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold capitalize">{monthLabel}</h1>
         <p className="text-sm text-muted-foreground">
-          {new Date(`${month}T12:00:00Z`).toLocaleDateString('es-MX', {
-            month: 'long',
-            year: 'numeric',
-            timeZone: 'America/Mexico_City',
-          })} · MXN
+          {balance >= 0
+            ? `Vas bien — ${fmt(balance)} de margen este mes.`
+            : `Déficit de ${fmt(Math.abs(balance))} — revisa tus gastos.`}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KpiCard
-          label="Balance del mes"
+          label="Balance"
           value={fmt(balance)}
-          sub={`${balanceDeltaPct >= 0 ? '+' : ''}${balanceDeltaPct.toFixed(0)}% vs. mes anterior`}
+          sub={`${balanceDeltaPct >= 0 ? '+' : ''}${balanceDeltaPct.toFixed(0)}% vs. mes pasado`}
           subTone={balanceDeltaPct >= 0 ? 'positive' : 'negative'}
         />
         <KpiCard
           label="Gastado"
           value={fmt(thisMonth.expenses)}
           progressPct={goalPct}
-          sub={`${goalPct.toFixed(0)}% de meta ${fmt(Number(goal.target_amount))}`}
+          sub={`${goalPct.toFixed(0)}% de ${fmt(Number(goal.target_amount))} presupuestado`}
         />
         <KpiCard
-          label="MSI del mes"
+          label="Comprometido en MSI"
           value={fmt(msiThisMonthTotal)}
-          sub={`${msiPurchases.length} compras activas`}
+          sub={`${msiPurchases.length} ${msiPurchases.length === 1 ? 'compra activa' : 'compras activas'}`}
         />
         <KpiCard
-          label="Ingresos del mes"
+          label="Ingresos"
           value={fmt(thisMonth.income)}
         />
       </div>
