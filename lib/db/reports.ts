@@ -67,10 +67,10 @@ export async function getMonthComparison(
   ]);
 
   const catMap = new Map(categories.map((c) => [c.id, c]));
-  const allIds = new Set([
+  const allIds = Array.from(new Set([
     ...Object.keys(summaryA.byCategory),
     ...Object.keys(summaryB.byCategory),
-  ]);
+  ]));
 
   const rows: MonthComparisonRow[] = [];
   for (const categoryId of allIds) {
@@ -167,10 +167,10 @@ export async function getHistoricalAverage(monthsBack: number = 6): Promise<Hist
     }
   }
 
-  const allIds = new Set([
+  const allIds = Array.from(new Set([
     ...Object.keys(totals),
     ...Object.keys(currentSummary.byCategory),
-  ]);
+  ]));
 
   const rows: HistoricalAvgRow[] = [];
   for (const categoryId of allIds) {
