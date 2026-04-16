@@ -41,7 +41,7 @@ const SECTIONS = [
   {
     label: 'Análisis',
     items: [
-      { href: '/reports', label: 'Reportes', icon: BarChart3, disabled: true },
+      { href: '/reports', label: 'Reportes', icon: BarChart3 },
       { href: '/settings', label: 'Ajustes', icon: Settings },
     ],
   },

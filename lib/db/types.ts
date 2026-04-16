@@ -92,3 +92,42 @@ export type UserSettings = {
   theme: 'light' | 'dark' | 'system';
   default_monthly_goal: number;
 };
+
+// --- Reports types ---
+
+export type CategoryTrendPoint = {
+  month: string;
+  categoryId: string;
+  categoryName: string;
+  color: string;
+  amount: number;
+};
+
+export type MonthComparisonRow = {
+  categoryId: string;
+  name: string;
+  color: string;
+  amountA: number;
+  amountB: number;
+  delta: number;
+  deltaPct: number;
+};
+
+export type MicroSpendingRow = {
+  categoryId: string;
+  name: string;
+  color: string;
+  count: number;
+  avgAmount: number;
+  total: number;
+};
+
+export type HistoricalAvgRow = {
+  categoryId: string;
+  name: string;
+  color: string;
+  historicalAvg: number;
+  currentMonth: number;
+  delta: number;
+  deltaPct: number;
+};
