@@ -37,8 +37,9 @@ export function CategoryDonut({ slices }: { slices: CategorySlice[] }) {
                     outerRadius={65}
                     paddingAngle={3}
                     strokeWidth={0}
-                    onClick={(entry) => {
-                      router.push(`/transactions?category=${entry.categoryId}`);
+                    onClick={(_, index) => {
+                      const slice = slices[index];
+                      if (slice) router.push(`/transactions?category=${slice.categoryId}`);
                     }}
                     style={{ cursor: 'pointer' }}
                   >
