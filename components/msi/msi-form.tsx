@@ -15,7 +15,7 @@ import { createMsiPurchase, updateMsiPurchase } from '@/app/(app)/msi/actions';
 import { HelpTip } from '@/components/ui/help-tip';
 import type { Account, Category, MsiPurchaseRow } from '@/lib/db/types';
 
-const INSTALLMENT_OPTIONS = [3, 6, 9, 12, 18, 24, 36];
+const INSTALLMENT_OPTIONS = [3, 6, 9, 11, 12, 15, 18, 24, 36];
 
 export function MsiForm({
   accounts,
