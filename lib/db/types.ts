@@ -1,6 +1,6 @@
 export type AccountType = 'debit' | 'credit' | 'cash';
 export type TxKind = 'expense' | 'income';
-export type TxSource = 'manual' | 'msi_aggregate' | 'msi_installment';
+export type TxSource = 'manual' | 'msi_aggregate' | 'msi_installment' | 'recurring';
 export type MsiStatus = 'active' | 'completed' | 'cancelled';
 
 export type Account = {
@@ -43,6 +43,7 @@ export type Transaction = {
   source: TxSource;
   msi_aggregate_month: string | null;
   msi_purchase_id: string | null;
+  recurring_item_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -78,6 +79,31 @@ export type Transfer = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type RecurringFrequency = 'weekly' | 'biweekly' | 'quincenal' | 'monthly' | 'bimonthly';
+export type RecurringType = 'subscription' | 'fixed';
+export type RecurringStatus = 'active' | 'paused' | 'cancelled';
+
+export type RecurringItem = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: RecurringType;
+  amount: number;
+  frequency: RecurringFrequency;
+  due_day: number | null;
+  account_id: string | null;
+  category_id: string | null;
+  status: RecurringStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecurringItemWithRelations = RecurringItem & {
+  accounts: { name: string; last_four: string | null } | null;
+  categories: { name: string; color: string; icon: string } | null;
 };
 
 export type MonthlyGoal = {

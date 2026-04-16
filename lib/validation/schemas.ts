@@ -42,6 +42,19 @@ export const transferSchema = z.object({
   notes: z.string().max(500).optional().nullable(),
 });
 
+export const recurringItemSchema = z.object({
+  name: z.string().min(1, 'Nombre requerido').max(100),
+  type: z.enum(['subscription', 'fixed']),
+  amount: z.coerce.number().positive('Debe ser positivo'),
+  frequency: z.enum(['weekly', 'biweekly', 'quincenal', 'monthly', 'bimonthly']),
+  due_day: z.coerce.number().int().min(1).max(31).optional().nullable(),
+  account_id: z.string().uuid().optional().nullable(),
+  category_id: z.string().uuid().optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+});
+
+export type RecurringItemInput = z.infer<typeof recurringItemSchema>;
+
 export const monthlyGoalSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}-01$/),
   target_amount: z.coerce.number().nonnegative(),
