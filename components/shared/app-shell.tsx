@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Overlay for mobile */}
       {open && (
         <div
-          className="fixed inset-0 z-20 bg-black/40 md:hidden"
+          className="fixed inset-0 z-20 bg-foreground/40 md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

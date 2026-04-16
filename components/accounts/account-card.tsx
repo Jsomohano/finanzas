@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,22 +22,42 @@ const TYPE_LABEL: Record<Account['type'], string> = {
   cash: 'Efectivo',
 };
 
+const UNDO_DELAY_MS = 6000;
+
 export function AccountCard({ account }: { account: Account }) {
   const [confirming, setConfirming] = useState(false);
-  const [pending, setPending] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [editing, setEditing] = useState(false);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
-  async function handleDelete() {
-    setPending(true);
-    const result = await deleteAccount(account.id);
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success('Cuenta eliminada');
-      router.refresh();
-    }
-    setPending(false);
+  function handleDelete() {
+    setConfirming(false);
+    setHidden(true);
+
+    const toastId = toast('Cuenta eliminada', {
+      action: {
+        label: 'Deshacer',
+        onClick: () => {
+          if (undoTimer.current) clearTimeout(undoTimer.current);
+          undoTimer.current = null;
+          setHidden(false);
+          toast.dismiss(toastId);
+        },
+      },
+      duration: UNDO_DELAY_MS,
+    });
+
+    undoTimer.current = setTimeout(async () => {
+      undoTimer.current = null;
+      const result = await deleteAccount(account.id);
+      if (result.error) {
+        setHidden(false);
+        toast.error(result.error);
+      } else {
+        router.refresh();
+      }
+    }, UNDO_DELAY_MS);
   }
 
   function onEditDone() {
@@ -45,6 +65,8 @@ export function AccountCard({ account }: { account: Account }) {
     router.refresh();
     toast.success('Cuenta actualizada');
   }
+
+  if (hidden) return null;
 
   return (
     <>
@@ -85,15 +107,13 @@ export function AccountCard({ account }: { account: Account }) {
                 <Button
                   size="sm"
                   variant="destructive"
-                  disabled={pending}
                   onClick={handleDelete}
                 >
-                  {pending ? 'Eliminando…' : 'Sí, eliminar'}
+                  Sí, eliminar
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
-                  disabled={pending}
                   onClick={() => setConfirming(false)}
                 >
                   Cancelar

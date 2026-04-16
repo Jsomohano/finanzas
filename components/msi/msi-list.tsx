@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -34,24 +34,54 @@ function paidInstallments(p: MsiPurchaseWithAccount, nowMonth: string): number {
   return paidFromPast + (currentMonthClosed ? 1 : 0);
 }
 
+const UNDO_DELAY_MS = 6000;
+
 export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) {
   const nowMonth = currentMonthMX();
   const [confirming, setConfirming] = useState<string | null>(null);
-  const [pending, setPending] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const router = useRouter();
 
-  async function handleCancel(id: string) {
-    setPending(id);
-    const result = await cancelMsiPurchase(id);
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success('Compra MSI cancelada');
-      router.refresh();
-    }
+  const handleCancel = useCallback((id: string) => {
     setConfirming(null);
-    setPending(null);
-  }
+    setHidden((prev) => new Set(prev).add(id));
+
+    const toastId = toast('Compra MSI cancelada', {
+      action: {
+        label: 'Deshacer',
+        onClick: () => {
+          const timer = undoTimers.current.get(id);
+          if (timer) clearTimeout(timer);
+          undoTimers.current.delete(id);
+          setHidden((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+          toast.dismiss(toastId);
+        },
+      },
+      duration: UNDO_DELAY_MS,
+    });
+
+    const timer = setTimeout(async () => {
+      undoTimers.current.delete(id);
+      const result = await cancelMsiPurchase(id);
+      if (result.error) {
+        setHidden((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        toast.error(result.error);
+      } else {
+        router.refresh();
+      }
+    }, UNDO_DELAY_MS);
+
+    undoTimers.current.set(id, timer);
+  }, [router]);
 
   if (purchases.length === 0) {
     return (
@@ -78,7 +108,7 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {purchases.map((p) => {
+        {purchases.filter((p) => !hidden.has(p.id)).map((p) => {
           const per = monthlyAmount(p);
           const paid = paidInstallments(p, nowMonth);
           return (
@@ -101,15 +131,13 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
                         <Button
                           size="sm"
                           variant="destructive"
-                          disabled={pending === p.id}
                           onClick={() => handleCancel(p.id)}
                         >
-                          {pending === p.id ? '…' : 'Cancelar MSI'}
+                          Cancelar MSI
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          disabled={pending === p.id}
                           onClick={() => setConfirming(null)}
                         >
                           No

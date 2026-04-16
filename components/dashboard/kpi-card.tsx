@@ -33,7 +33,7 @@ export function KpiCard({
         {sub && (
           <div
             className={
-              'text-xs mt-2 ' +
+              'text-xs mt-2 flex items-center gap-0.5 ' +
               (subTone === 'positive'
                 ? 'text-positive'
                 : subTone === 'negative'
@@ -41,6 +41,8 @@ export function KpiCard({
                 : 'text-muted-foreground')
             }
           >
+            {subTone === 'positive' && <span aria-hidden="true">↑</span>}
+            {subTone === 'negative' && <span aria-hidden="true">↓</span>}
             {sub}
           </div>
         )}

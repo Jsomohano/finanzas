@@ -34,12 +34,12 @@ export function MsiCalendar({
             key={entry.month}
             className={`flex justify-between text-sm px-3 py-2 rounded ${
               status === 'pagado' ? 'bg-muted text-muted-foreground' :
-              status === 'este mes' ? 'bg-primary/10 font-semibold' : ''
+              status === 'este mes' ? 'bg-primary/[0.12] ring-1 ring-primary/30 font-semibold' : ''
             }`}
           >
             <span>Pago {entry.index} · {entry.month}</span>
             <span>${entry.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
-            <span className="text-xs uppercase">{status}</span>
+            <span className={`text-xs uppercase ${status === 'este mes' ? 'text-primary' : ''}`}>{status}</span>
           </div>
         );
       })}
