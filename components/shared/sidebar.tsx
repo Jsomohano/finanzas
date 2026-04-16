@@ -27,7 +27,7 @@ const SECTIONS = [
     label: 'Compromisos',
     items: [
       { href: '/msi', label: 'MSI', icon: CreditCard },
-      { href: '/subscriptions', label: 'Suscripciones', icon: Repeat, disabled: true },
+      { href: '/recurring', label: 'Recurrentes', icon: Repeat },
     ],
   },
   {
