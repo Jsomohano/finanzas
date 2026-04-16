@@ -67,11 +67,15 @@ export async function syncMsiInstallments(): Promise<void> {
     if (existingTx) {
       // Update if amount or description changed
       if (Number(existingTx.amount) !== amountDue) {
-        await supabase.from('transactions').update({ amount: amountDue, description, date: txDate }).eq('id', existingTx.id);
+        const { error: updateErr } = await supabase
+          .from('transactions')
+          .update({ amount: amountDue, description, date: txDate })
+          .eq('id', existingTx.id);
+        if (updateErr) console.error('[syncMsiInstallments] update error:', updateErr);
       }
     } else {
       // Create new installment transaction
-      await supabase.from('transactions').insert({
+      const { error: insertErr } = await supabase.from('transactions').insert({
         user_id: user.id,
         date: txDate,
         amount: amountDue,
@@ -83,6 +87,7 @@ export async function syncMsiInstallments(): Promise<void> {
         msi_aggregate_month: month,
         msi_purchase_id: p.id,
       });
+      if (insertErr) console.error('[syncMsiInstallments] insert error:', insertErr);
     }
   }
 
