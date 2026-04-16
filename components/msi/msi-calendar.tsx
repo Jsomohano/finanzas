@@ -2,7 +2,13 @@ import type { MsiPurchaseRow } from '@/lib/db/types';
 import { paymentSchedule } from '@/lib/msi/calculations';
 import { currentMonthMX } from '@/lib/dates/month-mx';
 
-export function MsiCalendar({ purchase }: { purchase: MsiPurchaseRow }) {
+export function MsiCalendar({
+  purchase,
+  closingDay,
+}: {
+  purchase: MsiPurchaseRow;
+  closingDay?: number | null;
+}) {
   const schedule = paymentSchedule({
     id: purchase.id,
     total_amount: purchase.total_amount,
@@ -11,13 +17,18 @@ export function MsiCalendar({ purchase }: { purchase: MsiPurchaseRow }) {
     status: purchase.status,
   });
   const nowMonth = currentMonthMX();
+  const todayDay = new Date().getDate();
+  // Current month counts as paid if the closing day has already passed
+  const currentMonthIsPaid = closingDay != null && todayDay >= closingDay;
 
   return (
     <div className="space-y-1">
       {schedule.map((entry) => {
+        const isPast = entry.month < nowMonth;
+        const isCurrent = entry.month === nowMonth;
         const status =
-          entry.month < nowMonth ? 'pagado' :
-          entry.month === nowMonth ? 'este mes' : 'pendiente';
+          isPast || (isCurrent && currentMonthIsPaid) ? 'pagado' :
+          isCurrent ? 'este mes' : 'pendiente';
         return (
           <div
             key={entry.month}

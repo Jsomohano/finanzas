@@ -18,6 +18,22 @@ import { currentMonthMX } from '@/lib/dates/month-mx';
 import { toast } from 'sonner';
 import { cancelMsiPurchase } from '@/app/(app)/msi/actions';
 
+/** If the account's closing day has already passed this month, the current month
+ *  installment has already appeared on the statement → count it as paid. */
+function paidInstallments(p: MsiPurchaseWithAccount, nowMonth: string): number {
+  const remaining = monthsRemaining(
+    { id: p.id, total_amount: p.total_amount, installments: p.installments, first_payment_month: p.first_payment_month, status: p.status },
+    nowMonth
+  );
+  const paidFromPast = p.installments - remaining; // months strictly before current month
+
+  const closingDay = p.accounts?.closing_day ?? null;
+  const todayDay = new Date().getDate();
+  const currentMonthClosed = closingDay !== null && todayDay >= closingDay && remaining > 0;
+
+  return paidFromPast + (currentMonthClosed ? 1 : 0);
+}
+
 export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) {
   const nowMonth = currentMonthMX();
   const [confirming, setConfirming] = useState<string | null>(null);
@@ -64,11 +80,7 @@ export function MsiList({ purchases }: { purchases: MsiPurchaseWithAccount[] }) 
       <TableBody>
         {purchases.map((p) => {
           const per = monthlyAmount(p);
-          const remaining = monthsRemaining(
-            { id: p.id, total_amount: p.total_amount, installments: p.installments, first_payment_month: p.first_payment_month, status: p.status },
-            nowMonth
-          );
-          const paid = p.installments - remaining;
+          const paid = paidInstallments(p, nowMonth);
           return (
             <TableRow key={p.id}>
               <TableCell className="font-medium">{p.description}</TableCell>

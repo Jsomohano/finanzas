@@ -63,7 +63,7 @@ export default async function MsiDetailPage({ params }: { params: { id: string }
 
       <div>
         <h2 className="text-sm font-semibold mb-2">Calendario de pagos</h2>
-        <MsiCalendar purchase={purchase} />
+        <MsiCalendar purchase={purchase} closingDay={purchase.accounts?.closing_day ?? null} />
       </div>
     </div>
   );
