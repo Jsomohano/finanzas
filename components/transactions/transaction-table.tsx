@@ -47,44 +47,22 @@ export function TransactionTable({
   const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const router = useRouter();
 
-  const handleDelete = useCallback((id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     setConfirming(null);
     setHidden((prev) => new Set(prev).add(id));
 
-    const toastId = toast('Transacción eliminada', {
-      action: {
-        label: 'Deshacer',
-        onClick: () => {
-          const timer = undoTimers.current.get(id);
-          if (timer) clearTimeout(timer);
-          undoTimers.current.delete(id);
-          setHidden((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          });
-          toast.dismiss(toastId);
-        },
-      },
-      duration: UNDO_DELAY_MS,
-    });
-
-    const timer = setTimeout(async () => {
-      undoTimers.current.delete(id);
-      const result = await deleteTransaction(id);
-      if (result.error) {
-        setHidden((prev) => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
-        });
-        toast.error(result.error);
-      } else {
-        router.refresh();
-      }
-    }, UNDO_DELAY_MS);
-
-    undoTimers.current.set(id, timer);
+    const result = await deleteTransaction(id);
+    if (result.error) {
+      setHidden((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      toast.error(result.error);
+    } else {
+      toast.success('Transacción eliminada');
+      router.refresh();
+    }
   }, [router]);
 
   function onEditDone() {
