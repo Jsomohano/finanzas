@@ -40,14 +40,14 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/expense — registers an expense
-// Body: { amount: number, description: string, category_id?: string, date?: string (YYYY-MM-DD) }
+// Body: { amount: number, description: string, account?: string, date?: string (YYYY-MM-DD) }
 export async function POST(req: NextRequest) {
   if (!checkAuth(req)) return unauthorized();
 
   const userId = process.env.SHORTCUT_USER_ID;
   if (!userId) return NextResponse.json({ error: 'SHORTCUT_USER_ID no configurado' }, { status: 500 });
 
-  let body: { amount?: unknown; description?: unknown; category_id?: unknown; date?: unknown };
+  let body: { amount?: unknown; description?: unknown; account?: unknown; date?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
   const amount = Number(body.amount);
   const description = String(body.description ?? '').trim();
   const date = String(body.date ?? new Date().toISOString().slice(0, 10));
+  const accountName = String(body.account ?? '').trim();
 
   if (!amount || amount <= 0) {
     return NextResponse.json({ error: 'El monto debe ser mayor a 0' }, { status: 400 });
@@ -67,38 +68,65 @@ export async function POST(req: NextRequest) {
 
   const supabase = adminClient();
 
-  // Resolve category — use provided id, else fall back to first expense category
-  let categoryId = String(body.category_id ?? '').trim() || null;
-  if (!categoryId) {
-    const { data: cat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('type', 'expense')
-      .order('name')
-      .limit(1)
-      .maybeSingle();
-    categoryId = cat?.id ?? null;
-  }
-
-  if (!categoryId) {
-    return NextResponse.json({ error: 'No hay categorías de gasto configuradas' }, { status: 400 });
-  }
-
-  // Use first account as default
-  const { data: account } = await supabase
-    .from('accounts')
+  // Buscar o crear la categoría "Salidas"
+  let categoryId: string | null = null;
+  const { data: catData } = await supabase
+    .from('categories')
     .select('id')
     .eq('user_id', userId)
-    .limit(1)
+    .eq('type', 'expense')
+    .ilike('name', 'salidas')
     .maybeSingle();
+
+  if (catData) {
+    categoryId = catData.id;
+  } else {
+    // Crear la nueva categoría "Salidas"
+    const { data: newCat, error: catError } = await supabase
+      .from('categories')
+      .insert({ user_id: userId, name: 'Salidas', type: 'expense' })
+      .select('id')
+      .single();
+    
+    if (newCat) {
+      categoryId = newCat.id;
+    } else {
+      return NextResponse.json({ error: catError?.message || 'Error al crear la categoría Salidas' }, { status: 500 });
+    }
+  }
+
+  // Buscar la cuenta
+  let accountId: string | null = null;
+  if (accountName) {
+    const { data: accData } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId)
+      .ilike('name', accountName)
+      .maybeSingle();
+      
+    if (accData) {
+      accountId = accData.id;
+    } else {
+      return NextResponse.json({ error: `La cuenta "${accountName}" no existe en la base de datos` }, { status: 400 });
+    }
+  } else {
+    // Cuenta por defecto si no se especifica
+    const { data: account } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    accountId = account?.id ?? null;
+  }
 
   const { error } = await supabase.from('transactions').insert({
     user_id: userId,
     amount,
     description,
     category_id: categoryId,
-    account_id: account?.id ?? null,
+    account_id: accountId,
     kind: 'expense',
     date,
     source: 'manual',
