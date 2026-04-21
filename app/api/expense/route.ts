@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
     .from('accounts')
     .select('id, name')
     .eq('user_id', userId)
+    .eq('is_active', true)
     .order('name');
 
   if (accError) return NextResponse.json({ error: accError.message }, { status: 500 });
