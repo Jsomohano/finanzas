@@ -19,7 +19,7 @@ function checkAuth(req: NextRequest) {
   return header === `Bearer ${key}`;
 }
 
-// GET /api/expense — returns categories list for the Shortcut picker
+// GET /api/expense — returns categories and accounts list for the Shortcut picker
 export async function GET(req: NextRequest) {
   if (!checkAuth(req)) return unauthorized();
 
@@ -27,16 +27,30 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'SHORTCUT_USER_ID no configurado' }, { status: 500 });
 
   const supabase = adminClient();
-  const { data, error } = await supabase
+  
+  // Fetch categories
+  const { data: categories, error: catError } = await supabase
     .from('categories')
     .select('id, name')
     .eq('user_id', userId)
-    .eq('type', 'expense')
+    .eq('kind', 'expense')
     .order('name');
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (catError) return NextResponse.json({ error: catError.message }, { status: 500 });
 
-  return NextResponse.json({ categories: data ?? [] });
+  // Fetch accounts
+  const { data: accounts, error: accError } = await supabase
+    .from('accounts')
+    .select('id, name')
+    .eq('user_id', userId)
+    .order('name');
+
+  if (accError) return NextResponse.json({ error: accError.message }, { status: 500 });
+
+  return NextResponse.json({ 
+    categories: categories ?? [],
+    accounts: accounts ?? []
+  });
 }
 
 // POST /api/expense — registers an expense
@@ -74,7 +88,7 @@ export async function POST(req: NextRequest) {
     .from('categories')
     .select('id')
     .eq('user_id', userId)
-    .eq('type', 'expense')
+    .eq('kind', 'expense')
     .ilike('name', 'salidas')
     .maybeSingle();
 
@@ -84,7 +98,7 @@ export async function POST(req: NextRequest) {
     // Crear la nueva categoría "Salidas"
     const { data: newCat, error: catError } = await supabase
       .from('categories')
-      .insert({ user_id: userId, name: 'Salidas', type: 'expense' })
+      .insert({ user_id: userId, name: 'Salidas', kind: 'expense' })
       .select('id')
       .single();
     
